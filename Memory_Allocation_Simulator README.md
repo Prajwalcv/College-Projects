@@ -29,30 +29,6 @@ The First Fit algorithm searches through available memory holes in order and all
 ### Space Complexity
 - **O(n)** - Where n is the number of processes/holes being tracked in the holes table
 
-## How to Use
-
-### Compilation
-```bash
-gcc -o memory_simulator memory_allocation.c
-# or for C++
-g++ -o memory_simulator memory_allocation.cpp
-```
-
-### Execution
-```bash
-./memory_simulator
-```
-
-### Input Format
-[Specify the format for process requests, memory sizes, etc.]
-
-## Project Structure
-```
-Memory_Allocation_Simulator/
-├── memory_allocation.c/.cpp (or main source file)
-├── README.md
-└── [other relevant files]
-```
 
 ## Example Output
 ```
@@ -88,13 +64,8 @@ Process 3 (Size: 2000 MB) - Allocation Failed (Insufficient Memory)
 - Performance comparison between different allocation strategies
 - Virtual memory support
 
-## System Requirements
-- C or C++ compiler (GCC, Clang, or MSVC)
-- 4 MB RAM minimum for simulation
-- Any modern operating system (Linux, Windows, macOS)
-
-## Author & License
-[Add your name/contact and license information if applicable]
+## Author
+Prajwal CV
 
 ## References
 - Operating System Concepts (Silberschatz, Galvin, Gagne)
