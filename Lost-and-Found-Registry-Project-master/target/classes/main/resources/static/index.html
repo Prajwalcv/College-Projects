@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lost & Found Registry Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 30px; background-color: #f4f6f9; color: #333; }
+        .container { max-width: 950px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #2c3e50; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
+        .section { margin-bottom: 30px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fafbfc; }
+        h3 { margin-top: 0; color: #34495e; }
+        input, select, button { padding: 10px; margin: 8px 0; width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
+        button { background-color: #3498db; color: white; border: none; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        button:hover { background-color: #2980b9; }
+        .btn-delete { background-color: #e74c3c; }
+        .btn-delete:hover { background-color: #c0392b; }
+
+        /* Table Layout Styling */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: left; }
+        th { background-color: #f1f5f9; color: #1e293b; font-weight: 600; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+        .no-data { text-align: center; color: #64748b; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📋 Lost & Found Registry Hub</h1>
+
+    <div class="section">
+        <h3>➕ Register a Lost Item</h3>
+        <input type="text" id="name" placeholder="Item Name (e.g., iPhone 13, Leather Wallet)">
+
+        <select id="category">
+            <option value="" disabled selected>-- Select Item Category --</option>
+            <option value="Electronics">🔌 Electronics (Phone, Laptop, Charger)</option>
+            <option value="Clothing">👕 Clothing & Accessories (Jacket, Cap, Bag)</option>
+            <option value="Stationery">✏️ Stationery (Notebook, Pencil Box, Files)</option>
+            <option value="Documents">📄 Documents & Cards (ID Card, Passport, Wallet)</option>
+            <option value="Keys">🔑 Keys (Car Keys, Room Keys)</option>
+            <option value="Others">📦 Others</option>
+        </select>
+
+        <input type="text" id="location" placeholder="Location Found (e.g., Room 302, Cafeteria)">
+        <input type="date" id="dateFound">
+        <button onclick="registerItem()">Submit to Registry</button>
+    </div>
+
+    <div class="section">
+        <h3>🔍 Search Registry Database</h3>
+        <select id="searchField">
+            <option value="id">Item ID </option>
+            <option value="name">Item Name</option>
+            <option value="category">Category </option>
+            <option value="location">Location </option>
+            <option value="date">Date Found </option>
+        </select>
+        <input type="text" id="searchValue" placeholder="Enter search term...">
+        <button onclick="searchRegistry()">Execute Search</button>
+
+        <table id="searchResultsTable" style="display: none;">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Item Name</th>
+                <th>Category</th>
+                <th>Location Found</th>
+                <th>Date Found</th>
+            </tr>
+            </thead>
+            <tbody id="searchResultsRows"></tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h3>📦 Inventory Management</h3>
+        <button style="background-color: #2ecc71;" onclick="loadInventory()">Refresh Inventory List</button>
+
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Item Name</th>
+                <th>Category</th>
+                <th>Location Found</th>
+                <th>Date Found</th>
+            </tr>
+            </thead>
+            <tbody id="inventoryTableRows">
+            <tr>
+                <td colspan="5" class="no-data">Click "Refresh Inventory List" to fetch records.</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed #cbd5e1;">
+            <input type="number" id="deleteId" placeholder="Enter Item ID to remove/claim">
+            <button class="btn-delete" onclick="deleteItem()">Remove Item (Claimed)</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = "http://localhost:8080/api/items";
+
+    async function registerItem() {
+        const nameInput = document.getElementById('name');
+        const categorySelect = document.getElementById('category');
+        const locationInput = document.getElementById('location');
+        const dateInput = document.getElementById('dateFound');
+
+        if (!categorySelect.value) {
+            alert("Please select a category before submitting!");
+            return;
+        }
+
+        const payload = {
+            name: nameInput.value,
+            category: categorySelect.value,
+            location: locationInput.value,
+            dateFound: dateInput.value
+        };
+
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        alert(await response.text());
+
+        // Clear inputs and reset the dropdown back to placeholder
+        nameInput.value = "";
+        categorySelect.value = "";
+        locationInput.value = "";
+        dateInput.value = "";
+
+        loadInventory();
+    }
+
+    async function loadInventory() {
+        const response = await fetch(API_URL);
+        const items = await response.json();
+        const tbody = document.getElementById('inventoryTableRows');
+
+        tbody.innerHTML = "";
+        if (items.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="no-data">No items in registry.</td></tr>`;
+            return;
+        }
+
+        items.forEach(item => {
+            tbody.innerHTML += `<tr>
+                <td><strong>${item.id}</strong></td>
+                <td>${item.name}</td>
+                <td>${item.category}</td>
+                <td>📍 ${item.location}</td>
+                <td>📅 ${item.dateFound}</td>
+            </tr>`;
+        });
+    }
+
+    async function searchRegistry() {
+        const field = document.getElementById('searchField').value;
+        const value = document.getElementById('searchValue').value;
+        let url = `${API_URL}/search?field=${field}&value=${value}`;
+        if (field === 'id') url = `${API_URL}/search/id/${value}`;
+
+        const response = await fetch(url);
+        const items = await response.json();
+
+        const table = document.getElementById('searchResultsTable');
+        const tbody = document.getElementById('searchResultsRows');
+
+        tbody.innerHTML = "";
+        table.style.display = "table";
+
+        if (items.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="no-data">No matching records found.</td></tr>`;
+            return;
+        }
+
+        items.forEach(item => {
+            tbody.innerHTML += `<tr>
+                <td><strong>${item.id}</strong></td>
+                <td>${item.name}</td>
+                <td>${item.category}</td>
+                <td>📍 ${item.location}</td>
+                <td>📅 ${item.dateFound}</td>
+            </tr>`;
+        });
+    }
+
+    async function deleteItem() {
+        const idInput = document.getElementById('deleteId');
+        const response = await fetch(`${API_URL}/${idInput.value}`, { method: 'DELETE' });
+        alert(await response.text());
+        idInput.value = "";
+        loadInventory();
+    }
+
+    loadInventory();
+</script>
+</body>
+</html>
